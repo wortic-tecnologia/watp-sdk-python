@@ -1,0 +1,299 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://watp.local/protocol/watp-message-envelope.schema.json",
+  "title": "WATP Message Envelope",
+  "description": "Runtime envelope observed in the canonical supplier plugin and demo nodes. This schema documents the real contract for SDKs and connectors without promising stronger guarantees than the current runtime.",
+  "$comment": "Contract snapshot 2026-04-23. New SDKs should emit canonical fields previousHash, qty and unit_price, but accept prev_hash, quantity and price as compatibility aliases when reading.",
+  "type": "object",
+  "additionalProperties": true,
+  "$defs": {
+    "hashString": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "publicHttpsUrl": {
+      "type": "string",
+      "format": "uri",
+      "pattern": "^https://"
+    }
+  },
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Required stable message id used for idempotency and replay protection."
+    },
+    "negotiation_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Negotiation identifier. Required for every continuation event after the first HASH_INTEREST."
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "HASH_INTEREST",
+        "HASH_PROPOSAL",
+        "HASH_COUNTER",
+        "HASH_CONCLUDED",
+        "HASH_CANCELLED",
+        "HASH_WAITING_HUMAN"
+      ],
+      "description": "Observed runtime message types."
+    },
+    "payload": {
+      "type": "object",
+      "description": "Business payload. Non-cancelled events must carry product identity, quantity and unit price using canonical fields or tolerated aliases.",
+      "additionalProperties": true,
+      "properties": {
+        "item": {
+          "type": "string"
+        },
+        "sku": {
+          "type": "string"
+        },
+        "product_name": {
+          "type": "string"
+        },
+        "qty": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "quantity": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "unit_price": {
+          "type": "number",
+          "minimum": 0
+        },
+        "price": {
+          "type": "number",
+          "minimum": 0
+        },
+        "currency": {
+          "type": "string",
+          "minLength": 1
+        },
+        "buyer_url": {
+          "$ref": "#/$defs/publicHttpsUrl",
+          "description": "Recommended on HASH_INTEREST when the sender expects asynchronous replies from the supplier."
+        },
+        "payment_url": {
+          "$ref": "#/$defs/publicHttpsUrl",
+          "description": "Optional additive field on HASH_CONCLUDED when the supplier can return an official pay-for-order link."
+        }
+      }
+    },
+    "hash": {
+      "$ref": "#/$defs/hashString",
+      "description": "SHA-256 of the canonical object {type, payload, previousHash, timestamp}."
+    },
+    "previousHash": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^[a-f0-9]{64}$",
+      "description": "Canonical field for chain continuity. Emit this field on every event after the first HASH_INTEREST."
+    },
+    "prev_hash": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^[a-f0-9]{64}$",
+      "description": "Compatibility alias accepted by some nodes. New SDKs should read it but not emit it."
+    },
+    "timestamp": {
+      "type": "string",
+      "minLength": 1,
+      "format": "date-time",
+      "description": "UTC timestamp used in hash computation."
+    },
+    "sender": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Required logical node identifier of the emitter. Runtime writes must be signed by this known peer unless legacy compatibility is explicitly enabled."
+    },
+    "signature": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Persisted today as opaque data only. The current runtime does not cryptographically verify it end to end."
+    }
+  },
+  "required": [
+    "id",
+    "type",
+    "payload",
+    "hash",
+    "timestamp",
+    "sender"
+  ],
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "not": {
+              "const": "HASH_CANCELLED"
+            }
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "payload": {
+            "allOf": [
+              {
+                "anyOf": [
+                  {
+                    "required": [
+                      "item"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "sku"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "product_name"
+                    ]
+                  }
+                ]
+              },
+              {
+                "anyOf": [
+                  {
+                    "required": [
+                      "qty"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "quantity"
+                    ]
+                  }
+                ]
+              },
+              {
+                "anyOf": [
+                  {
+                    "required": [
+                      "unit_price"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "price"
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "not": {
+              "const": "HASH_INTEREST"
+            }
+          }
+        },
+        "required": [
+          "type"
+        ]
+      },
+      "then": {
+        "required": [
+          "negotiation_id"
+        ],
+        "anyOf": [
+          {
+            "required": [
+              "previousHash"
+            ],
+            "properties": {
+              "previousHash": {
+                "$ref": "#/$defs/hashString"
+              }
+            }
+          },
+          {
+            "required": [
+              "prev_hash"
+            ],
+            "properties": {
+              "prev_hash": {
+                "$ref": "#/$defs/hashString"
+              }
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "examples": [
+    {
+      "id": "c89958da-d1d9-4378-a35b-3449f8d2d835",
+      "type": "HASH_INTEREST",
+      "payload": {
+        "item": "Patch Cord Cat6 1.5m",
+        "sku": "TC-PC6-150",
+        "qty": 10,
+        "unit_price": 12.9,
+        "currency": "BRL",
+        "buyer": "site-b",
+        "buyer_name": "Site B",
+        "buyer_url": "https://site-b.wortic.com"
+      },
+      "hash": "4c5ee5b2dc6a546afe29b11a0e7d20dd41d7dd61bcca4b119a1310c8c3b54475",
+      "timestamp": "2026-04-23T05:40:00.000000Z",
+      "sender": "site-b"
+    },
+    {
+      "id": "8b09f4e0-bfb0-4c3a-a0e4-619ca13f957f",
+      "negotiation_id": "neg-123",
+      "type": "HASH_COUNTER",
+      "payload": {
+        "item": "Patch Cord Cat6",
+        "sku": "TC-PC6-150",
+        "qty": 100,
+        "unit_price": 11.9,
+        "currency": "BRL"
+      },
+      "hash": "f751808dc6c7a9745bdf5e5213dffbf4571b6ab46aab1345b7b4d3625cfcb994",
+      "previousHash": "5f8fc7f15e10c80e7d3c7ff66bb8a536f7c03825f4e507df43a1fb80252fd5f9",
+      "timestamp": "2026-04-22T00:00:00.000000Z",
+      "sender": "site-b"
+    },
+    {
+      "id": "5d572d8d-a022-4e96-b8f6-a7f844d5f12f",
+      "negotiation_id": "neg-payment-123",
+      "type": "HASH_CONCLUDED",
+      "payload": {
+        "item": "Patch Cord Cat6 1.5m",
+        "sku": "TC-PC6-150",
+        "qty": 10,
+        "unit_price": 12.9,
+        "currency": "BRL",
+        "accepted_by": "supplier",
+        "payment_url": "https://produtos.williamschons.com.br/checkout/order-pay/1234/?pay_for_order=true&key=wc_order_abc123"
+      },
+      "hash": "dd289952f18573901289e88371061875b550675ce68e8c1bd9ee1ef1c0122b15",
+      "previousHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "timestamp": "2026-04-23T05:41:00.000000Z",
+      "sender": "produtos"
+    }
+  ]
+}

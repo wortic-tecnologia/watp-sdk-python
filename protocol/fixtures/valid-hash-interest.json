@@ -1,0 +1,17 @@
+{
+  "id": "c89958da-d1d9-4378-a35b-3449f8d2d835",
+  "type": "HASH_INTEREST",
+  "payload": {
+    "item": "Patch Cord Cat6 1.5m",
+    "sku": "TC-PC6-150",
+    "qty": 10,
+    "unit_price": 12.9,
+    "currency": "BRL",
+    "buyer": "site-b",
+    "buyer_name": "Site B",
+    "buyer_url": "https://site-b.wortic.com"
+  },
+  "hash": "4c5ee5b2dc6a546afe29b11a0e7d20dd41d7dd61bcca4b119a1310c8c3b54475",
+  "timestamp": "2026-04-23T05:40:00.000000Z",
+  "sender": "site-b"
+}

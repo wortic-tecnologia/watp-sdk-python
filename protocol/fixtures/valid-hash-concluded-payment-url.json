@@ -1,0 +1,18 @@
+{
+  "id": "5d572d8d-a022-4e96-b8f6-a7f844d5f12f",
+  "negotiation_id": "neg-payment-123",
+  "type": "HASH_CONCLUDED",
+  "payload": {
+    "item": "Patch Cord Cat6 1.5m",
+    "sku": "TC-PC6-150",
+    "qty": 10,
+    "unit_price": 12.9,
+    "currency": "BRL",
+    "accepted_by": "supplier",
+    "payment_url": "https://produtos.williamschons.com.br/checkout/order-pay/1234/?pay_for_order=true&key=wc_order_abc123"
+  },
+  "hash": "dd289952f18573901289e88371061875b550675ce68e8c1bd9ee1ef1c0122b15",
+  "previousHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "timestamp": "2026-04-23T05:41:00.000000Z",
+  "sender": "produtos"
+}
