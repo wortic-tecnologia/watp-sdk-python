@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=69.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "watp-sdk"
+version = "0.1.0"
+description = "Minimal Python SDK for the current WATP real contract."
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [
+  { name = "WATP" },
+]
+keywords = ["watp", "protocol", "commerce", "woocommerce"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Software Development :: Libraries :: Python Modules",
+]
+dependencies = []
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+include = ["watp_sdk*"]
